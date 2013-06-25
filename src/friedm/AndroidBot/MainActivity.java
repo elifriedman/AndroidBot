@@ -1,12 +1,16 @@
 package friedm.AndroidBot;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -30,6 +34,8 @@ import java.util.Properties;
 public class MainActivity extends Activity
         implements CameraView.CameraReadyCallback, OverlayView.UpdateDoneCallback {
 
+    //Intent codes
+    private static final int REQUEST_CONNECT_DEVICE = 1;
 
     boolean inProcessing = false;
     final int maxVideoNumber = 3;
@@ -67,7 +73,9 @@ public class MainActivity extends Activity
     }
 
 
-    @Override
+    /**
+     * Called when the Surface is ready.
+     */
     public void onCameraReady() {
         if (initWebServer()) {
             int wid = cameraView_.Width();
@@ -76,6 +84,33 @@ public class MainActivity extends Activity
             cameraView_.setupCamera(wid, hei, previewCb_);
             cameraView_.StartPreview();
         }
+    }
+
+    private OnClickListener exitAction = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            onPause();
+        }
+    };
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.option_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent serverIntent = null;
+        switch (item.getItemId()) {
+            case R.id.connect_scan:
+                // Launch the DeviceListActivity to see devices and do scan
+                serverIntent = new Intent(this, DeviceListActivity.class);
+                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -98,6 +133,11 @@ public class MainActivity extends Activity
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+    }
+
+    @Override
     public void onPause() {
         super.onPause();
         inProcessing = true;
@@ -106,11 +146,6 @@ public class MainActivity extends Activity
         cameraView_.StopPreview();
 
         finish();
-    }
-
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
     }
 
 
@@ -142,10 +177,11 @@ public class MainActivity extends Activity
         return null;
     }
 
-    private void addCGI(String link, TeaServer.CommonGatewayInterface tscgi) {
-        webServer.registerCGI(link, tscgi);
-    }
-
+    /**
+     * Starts the webserver running on port 8080 and adds the classes to run
+     * when specific links are requested.
+     * @return True if setting up the webserver worked.
+     */
     private boolean initWebServer() {
         String ipAddr = getLocalIpAddress();
         if (ipAddr != null) {
@@ -168,13 +204,12 @@ public class MainActivity extends Activity
 
     }
 
-    private OnClickListener exitAction = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            onPause();
-        }
-    };
-
+    /**
+     * onPreviewFrame(byte[],Camera) is called whenever a new image is ready to
+     * be displayed on the surface.
+     * This is used to add the image data to the preFrame variable, which is then
+     * returned to the client as a jpeg formatted image.
+     */
     private PreviewCallback previewCb_ = new PreviewCallback() {
         public void onPreviewFrame(byte[] frame, Camera c) {
             if (!inProcessing) {
@@ -252,7 +287,6 @@ public class MainActivity extends Activity
             return null;
         }
     };
-
 
     private TeaServer.CommonGatewayInterface doCapture = new TeaServer.CommonGatewayInterface() {
         @Override

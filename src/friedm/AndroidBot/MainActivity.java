@@ -1,21 +1,23 @@
 package friedm.AndroidBot;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
 public class MainActivity extends Activity
       /*  implements CameraView.CameraReadyCallback, OverlayView.UpdateDoneCallback */ {
 
     private static final String TAG = "ABot::AndroidBot";
-
+    private static final boolean D = BuildConfig.DEBUG;
     //Intent codes
     private static final int REQUEST_CONNECT_DEVICE = 0;
     private static final int REQUEST_ENABLE_BT = 2;
+    // Local Bluetooth adapter
+    private BluetoothAdapter mBluetoothAdapter = null;
 
 
     boolean inProcessing = false;
@@ -32,7 +34,12 @@ public class MainActivity extends Activity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        // If the adapter is null, then Bluetooth is not supported
+        if (mBluetoothAdapter == null) {
+            Toast.makeText(this, "Bluetooth is not available", Toast.LENGTH_LONG).show();
+            finish();
+        }
 //        requestWindowFeature(Window.FEATURE_NO_TITLE);
 //        Window win = getWindow();
 //        win.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -105,12 +112,21 @@ public class MainActivity extends Activity
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (BuildConfig.DEBUG) Log.d(TAG, "onActivityResult " + resultCode);
+        if (D) Log.d(TAG, "onActivityResult " + resultCode);
         switch (requestCode) {
+            case REQUEST_CONNECT_DEVICE:
+                if (D) Log.d(TAG, "REQUEST_CONNECT_DEVICE");
+                // When DeviceListActivity returns with a device to connect
+                if (resultCode == Activity.RESULT_OK) {
+                    if (D) Log.d(TAG, "RESULT_OK");
+                }
+                break;
             case REQUEST_ENABLE_BT:
+                if (D) Log.d(TAG, "REQUEST_ENABLE,BT");
                 // When the request to enable Bluetooth returns
                 if (resultCode == Activity.RESULT_OK) {
-                    // Bluetooth is now enabled, so set up a chat session
+                    if (D) Log.d(TAG, "RESULT_OK");
+                    startDeviceSearch();
                 } else {
                     // User did not enable Bluetooth or an error occurred
                     Log.d(TAG, "BT not enabled");
@@ -134,7 +150,17 @@ public class MainActivity extends Activity
     @Override
     public void onStart() {
         super.onStart();
+        if (D) Log.d(TAG, "++ ON START ++");
 
+        // If BT is not on, request that it be enabled.
+        // setupChat() will then be called during onActivityResult
+        if (!mBluetoothAdapter.isEnabled()) {
+            Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
+            // Otherwise, setup the chat session
+        } else {
+            startDeviceSearch();
+        }
     }
 
     @Override

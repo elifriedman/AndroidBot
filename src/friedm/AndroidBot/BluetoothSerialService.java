@@ -20,7 +20,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothServerSocket;
 import android.bluetooth.BluetoothSocket;
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -39,8 +38,8 @@ import java.util.UUID;
  */
 public class BluetoothSerialService {
     // Debugging
-    private static final String TAG = "BluetoothSerialService";
-    private static final boolean D = true;
+    private static final String TAG = "ABot::BluetoothSerialService";
+    private static final boolean D = BuildConfig.DEBUG;
 
     // Name for the SDP record when creating server socket
     private static final String NAME_SECURE = "BluetoothSecure";
@@ -53,13 +52,55 @@ public class BluetoothSerialService {
             UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
     // Message types sent in the Handler
-    public static final int MESSAGE_STATE_CHANGE = 1;
+    /**
+     * A new message is available on the input stream.
+     */
     public static final int MESSAGE_READ = 2;
+
+    /**
+     * The message was sent successfully
+     */
     public static final int MESSAGE_WRITE = 3;
+
+    /**
+     * BluetoothSerialService has connected to a device and obtained its name.
+     */
     public static final int MESSAGE_DEVICE_NAME = 4;
+
+
+    // Constants that indicate the current connection state
+    /**
+     * The state has changed.
+     */
+    public static final int STATE_CHANGE = 1;
+
+    /**
+     * Doing nothing.
+     */
+    public static final int STATE_NONE = 5;
+
+    /**
+     * Listening for incoming connections.
+     */
+    public static final int STATE_LISTEN = 6;
+
+    /**
+     * Initiating an outgoing connection.
+     */
+    public static final int STATE_CONNECTING = 7;
+
+    /**
+     * Connected to a remote device.
+     */
+    public static final int STATE_CONNECTED = 8;
+
+    /**
+     * Some problem has occurred.
+     */
     public static final int MESSAGE_TOAST = 5;
     private static final String DEVICE_NAME = "device_name";
     private static final String TOAST = "toast";
+
 
     // Member fields
     private final BluetoothAdapter mAdapter;
@@ -71,21 +112,15 @@ public class BluetoothSerialService {
     private boolean mlistener;
     private int mState;
 
-    // Constants that indicate the current connection state
-    public static final int STATE_NONE = 0;       // we're doing nothing
-    public static final int STATE_LISTEN = 1;     // now listening for incoming connections
-    public static final int STATE_CONNECTING = 2; // now initiating an outgoing connection
-    public static final int STATE_CONNECTED = 3;  // now connected to a remote device
 
     /**
      * Constructor. Prepares a new Bluetooth controller.
      *
-     * @param context  The UI Activity Context. Right now, it's unnecessary.
      * @param handler  A Handler to send messages back to the UI Activity
      * @param listener If true, BluetoothSerialService listens for other devices to connect
      *                 otherwise it waits for the connect(BluetoothDevice) method to be called.
      */
-    public BluetoothSerialService(Context context, Handler handler, boolean listener) {
+    public BluetoothSerialService(Handler handler, boolean listener) {
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         mState = STATE_NONE;
         mHandler = handler;
@@ -102,7 +137,7 @@ public class BluetoothSerialService {
         mState = state;
 
         // Give the new state to the Handler so the UI Activity can update
-        mHandler.obtainMessage(MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
+        mHandler.obtainMessage(STATE_CHANGE, state, -1).sendToTarget();
     }
 
     /**

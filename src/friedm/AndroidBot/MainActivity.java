@@ -8,6 +8,7 @@ import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.hardware.Camera.PreviewCallback;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -18,6 +19,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.http.conn.util.InetAddressUtils;
 
@@ -34,8 +36,12 @@ import java.util.Properties;
 public class MainActivity extends Activity
         implements CameraView.CameraReadyCallback, OverlayView.UpdateDoneCallback {
 
+    private static final String TAG = "ABot::AndroidBot";
+
     //Intent codes
-    private static final int REQUEST_CONNECT_DEVICE = 1;
+    private static final int REQUEST_CONNECT_DEVICE = 0;
+    private static final int REQUEST_ENABLE_BT = 2;
+
 
     boolean inProcessing = false;
     final int maxVideoNumber = 3;
@@ -52,12 +58,12 @@ public class MainActivity extends Activity
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        new BluetoothController();
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         Window win = getWindow();
         win.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         setContentView(R.layout.main);
+
 
         btnExit = (Button) findViewById(R.id.btn_exit);
         btnExit.setOnClickListener(exitAction);
@@ -69,6 +75,7 @@ public class MainActivity extends Activity
 
 
         initCamera();
+
 
     }
 
@@ -93,6 +100,7 @@ public class MainActivity extends Activity
         }
     };
 
+    /************************************ Deal with bluetooth ***********************/
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
@@ -102,16 +110,43 @@ public class MainActivity extends Activity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        Intent serverIntent = null;
+
         switch (item.getItemId()) {
             case R.id.connect_scan:
-                // Launch the DeviceListActivity to see devices and do scan
-                serverIntent = new Intent(this, DeviceListActivity.class);
-                startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+                startDeviceSearch();
                 return true;
         }
         return false;
     }
+
+    /**
+     * Starts the DeviceListActivity intent, which will search for a device.
+     */
+    private void startDeviceSearch() {
+        if (BuildConfig.DEBUG) Log.d(TAG, "startDeviceSearch()");
+        // Launch the DeviceListActivity to see devices and do scan
+        Intent serverIntent = new Intent(this, DeviceListActivity.class);
+        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (BuildConfig.DEBUG) Log.d(TAG, "onActivityResult " + resultCode);
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                // When the request to enable Bluetooth returns
+                if (resultCode == Activity.RESULT_OK) {
+                    // Bluetooth is now enabled, so set up a chat session
+                } else {
+                    // User did not enable Bluetooth or an error occurred
+                    Log.d(TAG, "BT not enabled");
+                    Toast.makeText(this, R.string.bt_not_enabled_leaving, Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+        }
+    }
+
+
+    /**********************************************************************************/
 
     @Override
     public void onUpdateDone() {
@@ -125,6 +160,7 @@ public class MainActivity extends Activity
     @Override
     public void onStart() {
         super.onStart();
+
     }
 
     @Override

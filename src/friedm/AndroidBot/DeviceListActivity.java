@@ -44,8 +44,8 @@ import java.util.Set;
  */
 public class DeviceListActivity extends Activity {
     // Debugging
-    private static final String TAG = "DeviceListActivity";
-    private static final boolean D = true;
+    private static final String TAG = "ABot::DeviceListActivity";
+    private static final boolean D = BuildConfig.DEBUG;
 
     // Return Intent extra
     public static String EXTRA_DEVICE_ADDRESS = "device_address";
@@ -156,6 +156,7 @@ public class DeviceListActivity extends Activity {
     // The on-click listener for all devices in the ListViews
     private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
+
             // Cancel discovery because it's costly and we're about to connect
             mBtAdapter.cancelDiscovery();
 
@@ -167,9 +168,14 @@ public class DeviceListActivity extends Activity {
             Intent intent = new Intent();
             intent.putExtra(EXTRA_DEVICE_ADDRESS, address);
 
+
             // Set result and finish this Activity
             setResult(Activity.RESULT_OK, intent);
+            if (D) Log.d(TAG, address);
+
             finish();
+            if (D) Log.d(TAG, "finished");
+
         }
     };
 

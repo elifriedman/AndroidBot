@@ -62,11 +62,11 @@ function move(evt) {
 function send(x,y) {
     $.ajax({
             type: "GET",
-            url: basicURL + "cgi/data",
+            url: basicURL + data,
             data: "x="+x+"&y="+y,
             cache: false,
             error: function(jqXHR, txtStat, errorThrown) {
-                $("#debug_msg").html("Oh no: " + txtStat + "!!");
+               // $("#debug_msg").html("Oh no: " + txtStat + "!!");
                 }
         });
 }

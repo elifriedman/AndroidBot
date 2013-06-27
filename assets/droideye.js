@@ -77,12 +77,12 @@ var onQueryDone = function (ret) {
 var onHttpError = function () {
     $("#debug_msg").html("Can't connected with phone, please refresh web page!");   
     $("#btn_play").button('disable'); 
-    //$("#btn_ctrl").button('disable');
+    $("#btn_ctrl").button('disable');
 };
 
 var refreshLive = function() {
     picCount = picCount + 1;
-    $("#live_image").attr("src", basicURL + "stream/live.jpg?id=" + picCount);
+    $("#live_image").attr("src", basicURL + livejpg + "?id=" + picCount);
    
     $("#live_image").waitForImages( onImageLoadOK );
 };
@@ -95,7 +95,7 @@ var playClick = function () {
         
         $.ajax({
             type: "GET",
-            url: basicURL + "cgi/toggleCam",
+            url: basicURL + toggleCam,
             data: "toggle=start",
             cache: false,
             complete: refreshLive
@@ -107,7 +107,7 @@ var playClick = function () {
         
         $.ajax({
             type: "GET",
-            url: basicURL + "cgi/toggleCam",
+            url: basicURL + toggleCam,
             data: "toggle=stop",
             cache: false
         });
@@ -125,7 +125,7 @@ var doChangeRes = function () {
     var hei = supportedSize[targetIndex].height; 
     $.ajax({
         type: "GET",
-        url: basicURL + "cgi/setup",
+        url: basicURL + setup,
         cache: false,
         data: "wid=" + wid + "&hei=" + hei,
         success: onSetupOK
@@ -145,13 +145,13 @@ $("#page_main").live("pageinit", function() {
     $("#video_plane").width(planeWidth);
 
     $("#btn_play").button('disable');
-   //$("#btn_ctrl").button('disable');
+    $("#btn_ctrl").button('disable');
     $("#btn_play").bind("click", playClick);
     $("#btn_ctrl").bind('click',stControl);
     
     $.ajax({
         type: "GET",
-        url: basicURL + "cgi/query",
+        url: basicURL + query,
         cache: false,
         error: onHttpError,
         success: onQueryDone

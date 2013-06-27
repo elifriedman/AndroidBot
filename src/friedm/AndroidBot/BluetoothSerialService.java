@@ -338,9 +338,6 @@ public class BluetoothSerialService {
         bundle.putString(TOAST, "Device connection was lost");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
-
-        // Start the service over to restart listening mode
-        BluetoothSerialService.this.startListening();
     }
 
     /**

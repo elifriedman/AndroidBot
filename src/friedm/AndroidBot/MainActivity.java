@@ -2,6 +2,7 @@ package friedm.AndroidBot;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
@@ -54,6 +55,7 @@ public class MainActivity extends Activity
     private OverlayView overlayView_;
     private Button btnExit;
     private TextView tvMessage1;
+    private BluetoothController mBController;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -139,17 +141,25 @@ public class MainActivity extends Activity
         if (D) Log.d(TAG, "onActivityResult " + resultCode);
         switch (requestCode) {
             case REQUEST_CONNECT_DEVICE:
-                if (D) Log.d(TAG, "REQUEST_CONNECT_DEVICE");
                 // When DeviceListActivity returns with a device to connect
                 if (resultCode == Activity.RESULT_OK) {
-                    if (D) Log.d(TAG, "RESULT_OK");
+                    // Get the device MAC address
+                    String address = data.getExtras()
+                            .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                    // Get the BluetoothDevice object
+                    BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+                    //create a BluetoothController that will manage communication to the Arduino
+                    mBController = new BluetoothController(device);
+
+                    //Whenever new data comes from the Client, mBControllers run() method
+                    //will be called.
+                    webServer.registerCGI("/cgi/data", mBController);
+                    if (D) Log.d(TAG, "mBController registered.");
                 }
                 break;
             case REQUEST_ENABLE_BT:
-                if (D) Log.d(TAG, "REQUEST_ENABLE,BT");
                 // When the request to enable Bluetooth returns
                 if (resultCode == Activity.RESULT_OK) {
-                    if (D) Log.d(TAG, "RESULT_OK");
                     startDeviceSearch();
                 } else {
                     // User did not enable Bluetooth or an error occurred

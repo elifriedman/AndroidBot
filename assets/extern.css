@@ -25,3 +25,6 @@ div.right {
     height: 125px;
     float:right;
 }
+.spd {
+    display:inline;
+}

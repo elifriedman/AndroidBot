@@ -56,7 +56,9 @@ function move(evt) {
     
     if(y==y_old && x==x_old) //If nothing has changed, stop.
         return;
-    $("#debug_msg").html("("+x+","+y+")");
+    var s = $("#speed").val();
+    var t = $("#turn").val();
+    $("#debug_msg").html("("+x*s+","+y*t+")");
     send(x,y);
 }
 function send(x,y) {
@@ -66,7 +68,7 @@ function send(x,y) {
             data: "x="+x+"&y="+y,
             cache: false,
             error: function(jqXHR, txtStat, errorThrown) {
-               // $("#debug_msg").html("Oh no: " + txtStat + "!!");
+                $("#debug_msg").html("Oh no: " + txtStat + "!!");
                 }
         });
 }
